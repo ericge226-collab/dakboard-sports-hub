@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sports Hub Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .title {
+      font-size: 32px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #444;
+      padding-bottom: 5px;
+    }
+
+    .subsection-title {
+      font-size: 26px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #ccc;
+    }
+
+    .item {
+      margin: 6px 0;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Featured Teams -->
+<div class="section">
+  <div class="title">Featured Teams</div>
+
+  <div class="subsection-title">Toronto Blue Jays</div>
+  <div id="bluejays-content">Loading…</div>
+
+  <div class="subsection-title">New York Mets</div>
+  <div id="mets-content">Loading…</div>
+</div>
+
+<!-- League Scoreboards -->
+<div class="section">
+  <div class="title">League Scoreboards</div>
+
+  <div class="subsection-title">MLB</div>
+  <div id="mlb-content">Loading…</div>
+
+  <div class="subsection-title">NHL</div>
+  <div id="nhl-content">Loading…</div>
+
+  <div class="subsection-title">NFL</div>
+  <div id="nfl-content">Loading…</div>
+
+  <div class="subsection-title">NBA</div>
+  <div id="nba-content">Loading…</div>
+</div>
+
+<!-- News -->
+<div class="section">
+  <div class="title">Sports News</div>
+  <div id="news-content">Loading…</div>
+</div>
+
+<script>
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  return res.json();
+}
+
+function formatGames(events) {
+  return events.map(e => e.name).join("<br>");
+}
+
+async function loadMLB() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/baseball/mlb/scoreboard");
+  document.getElementById("mlb-content").innerHTML = formatGames(data.events);
+}
+
+async function loadNHL() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/hockey/nhl/scoreboard");
+  document.getElementById("nhl-content").innerHTML = formatGames(data.events);
+}
+
+async function loadNFL() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/football/nfl/scoreboard");
+  document.getElementById("nfl-content").innerHTML = formatGames(data.events);
+}
+
+async function loadNBA() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/basketball/nba/scoreboard");
+  document.getElementById("nba-content").innerHTML = formatGames(data.events);
+}
+
+async function loadTeamNews(teamId, elementId) {
+  const data = await fetchJSON(`https://site.api.espn.com/apis/v2/sports/baseball/mlb/teams/${teamId}/news`);
+  const headlines = data.articles.slice(0, 5).map(a => a.headline).join("<br>");
+  document.getElementById(elementId).innerHTML = headlines;
+}
+
+async function loadGeneralNews() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/baseball/mlb/news");
+  const headlines = data.articles.slice(0, 10).map(a => a.headline).join("<br>");
+  document.getElementById("news-content").innerHTML = headlines;
+}
+
+function refresh() {
+  loadMLB();
+  loadNHL();
+  loadNFL();
+  loadNBA();
+  loadTeamNews(14, "bluejays-content"); // Blue Jays
+  loadTeamNews(21, "mets-content");     // Mets
+  loadGeneralNews();
+}
+
+refresh();
+setInterval(refresh, 60000);
+</script>
+
+</body>
+</html>
