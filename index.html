@@ -92,7 +92,7 @@
 </div>
 
 <script>
-const PROXY = "https://corsproxy.io/?";
+const PROXY = "https://api.allorigins.win/raw?url=";
 
 async function fetchJSON(url) {
   const res = await fetch(PROXY + encodeURIComponent(url));
@@ -100,6 +100,7 @@ async function fetchJSON(url) {
 }
 
 function formatGames(events) {
+  if (!events || events.length === 0) return "No games today.";
   return events.map(e => e.name).join("<br>");
 }
 
@@ -107,25 +108,25 @@ function formatGames(events) {
 
 async function loadMLB() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/baseball/mlb/scoreboard");
-  document.getElementById("mlb-content").innerHTML = formatGames(data.events || []);
+  document.getElementById("mlb-content").innerHTML = formatGames(data.events);
 }
 
 async function loadNHL() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/hockey/nhl/scoreboard");
-  document.getElementById("nhl-content").innerHTML = formatGames(data.events || []);
+  document.getElementById("nhl-content").innerHTML = formatGames(data.events);
 }
 
 async function loadNFL() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/football/nfl/scoreboard");
-  document.getElementById("nfl-content").innerHTML = formatGames(data.events || []);
+  document.getElementById("nfl-content").innerHTML = formatGames(data.events);
 }
 
 async function loadNBA() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/basketball/nba/scoreboard");
-  document.getElementById("nba-content").innerHTML = formatGames(data.events || []);
+  document.getElementById("nba-content").innerHTML = formatGames(data.events);
 }
 
-/* FEATURED TEAMS (NEWS AS PROXY FOR “UPDATES”) */
+/* FEATURED TEAMS */
 
 async function loadTeamNews(teamId, elementId) {
   const data = await fetchJSON(
@@ -158,18 +159,14 @@ async function loadMLBStandings() {
   const nleast = (data.children || []).find(d => d.name === "National League East");
 
   document.getElementById("mlb-aleast-standings").innerHTML =
-    aleast && aleast.standings && aleast.standings.entries
-      ? aleast.standings.entries
-          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
-          .join("<br>")
-      : "No data.";
+    aleast?.standings?.entries
+      ?.map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+      .join("<br>") || "No data.";
 
   document.getElementById("mlb-nleast-standings").innerHTML =
-    nleast && nleast.standings && nleast.standings.entries
-      ? nleast.standings.entries
-          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
-          .join("<br>")
-      : "No data.";
+    nleast?.standings?.entries
+      ?.map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+      .join("<br>") || "No data.";
 }
 
 async function loadNHLStandings() {
@@ -178,11 +175,9 @@ async function loadNHLStandings() {
   const east = (data.children || []).find(d => (d.name || "").includes("Eastern"));
 
   document.getElementById("nhl-east-standings").innerHTML =
-    east && east.standings && east.standings.entries
-      ? east.standings.entries
-          .map(t => `${t.team.displayName}: ${t.stats[0].value} pts`)
-          .join("<br>")
-      : "No data.";
+    east?.standings?.entries
+      ?.map(t => `${t.team.displayName}: ${t.stats[0].value} pts`)
+      .join("<br>") || "No data.";
 }
 
 async function loadNFLStandings() {
@@ -191,11 +186,9 @@ async function loadNFLStandings() {
   const afceast = (data.children || []).find(d => d.name === "AFC East");
 
   document.getElementById("nfl-afceast-standings").innerHTML =
-    afceast && afceast.standings && afceast.standings.entries
-      ? afceast.standings.entries
-          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
-          .join("<br>")
-      : "No data.";
+    afceast?.standings?.entries
+      ?.map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+      .join("<br>") || "No data.";
 }
 
 async function loadNBAStandings() {
@@ -204,33 +197,27 @@ async function loadNBAStandings() {
   const east = (data.children || []).find(d => (d.name || "").includes("Eastern"));
 
   document.getElementById("nba-east-standings").innerHTML =
-    east && east.standings && east.standings.entries
-      ? east.standings.entries
-          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
-          .join("<br>")
-      : "No data.";
+    east?.standings?.entries
+      ?.map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+      .join("<br>") || "No data.";
 }
 
 /* REFRESH LOOP */
 
 function refresh() {
-  // Scoreboards
   loadMLB();
   loadNHL();
   loadNFL();
   loadNBA();
 
-  // Standings
   loadMLBStandings();
   loadNHLStandings();
   loadNFLStandings();
   loadNBAStandings();
 
-  // Featured teams
   loadTeamNews(14, "bluejays-content"); // Blue Jays
   loadTeamNews(21, "mets-content");     // Mets
 
-  // General news
   loadGeneralNews();
 }
 
