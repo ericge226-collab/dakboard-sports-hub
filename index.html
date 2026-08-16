@@ -92,10 +92,10 @@
 </div>
 
 <script>
-const PROXY = "https://api.allorigins.win/raw?url=";
+const PROXY = "https://thingproxy.freeboard.io/fetch/";
 
 async function fetchJSON(url) {
-  const res = await fetch(PROXY + encodeURIComponent(url));
+  const res = await fetch(PROXY + url);
   return res.json();
 }
 
