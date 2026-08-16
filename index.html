@@ -65,6 +65,26 @@
   <div id="nba-content">Loading…</div>
 </div>
 
+<!-- Standings -->
+<div class="section">
+  <div class="title">Standings</div>
+
+  <div class="subsection-title">MLB — AL East</div>
+  <div id="mlb-aleast-standings">Loading…</div>
+
+  <div class="subsection-title">MLB — NL East</div>
+  <div id="mlb-nleast-standings">Loading…</div>
+
+  <div class="subsection-title">NHL — Eastern Conference</div>
+  <div id="nhl-east-standings">Loading…</div>
+
+  <div class="subsection-title">NFL — AFC East</div>
+  <div id="nfl-afceast-standings">Loading…</div>
+
+  <div class="subsection-title">NBA — Eastern Conference</div>
+  <div id="nba-east-standings">Loading…</div>
+</div>
+
 <!-- News -->
 <div class="section">
   <div class="title">Sports News</div>
@@ -72,8 +92,10 @@
 </div>
 
 <script>
+const PROXY = "https://corsproxy.io/?";
+
 async function fetchJSON(url) {
-  const res = await fetch(url);
+  const res = await fetch(PROXY + encodeURIComponent(url));
   return res.json();
 }
 
@@ -81,45 +103,134 @@ function formatGames(events) {
   return events.map(e => e.name).join("<br>");
 }
 
+/* SCOREBOARDS */
+
 async function loadMLB() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/baseball/mlb/scoreboard");
-  document.getElementById("mlb-content").innerHTML = formatGames(data.events);
+  document.getElementById("mlb-content").innerHTML = formatGames(data.events || []);
 }
 
 async function loadNHL() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/hockey/nhl/scoreboard");
-  document.getElementById("nhl-content").innerHTML = formatGames(data.events);
+  document.getElementById("nhl-content").innerHTML = formatGames(data.events || []);
 }
 
 async function loadNFL() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/football/nfl/scoreboard");
-  document.getElementById("nfl-content").innerHTML = formatGames(data.events);
+  document.getElementById("nfl-content").innerHTML = formatGames(data.events || []);
 }
 
 async function loadNBA() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/basketball/nba/scoreboard");
-  document.getElementById("nba-content").innerHTML = formatGames(data.events);
+  document.getElementById("nba-content").innerHTML = formatGames(data.events || []);
 }
 
+/* FEATURED TEAMS (NEWS AS PROXY FOR “UPDATES”) */
+
 async function loadTeamNews(teamId, elementId) {
-  const data = await fetchJSON(`https://site.api.espn.com/apis/v2/sports/baseball/mlb/teams/${teamId}/news`);
-  const headlines = data.articles.slice(0, 5).map(a => a.headline).join("<br>");
-  document.getElementById(elementId).innerHTML = headlines;
+  const data = await fetchJSON(
+    `https://site.api.espn.com/apis/v2/sports/baseball/mlb/teams/${teamId}/news`
+  );
+  const headlines = (data.articles || [])
+    .slice(0, 5)
+    .map(a => a.headline)
+    .join("<br>");
+  document.getElementById(elementId).innerHTML = headlines || "No recent items.";
 }
+
+/* GENERAL NEWS */
 
 async function loadGeneralNews() {
   const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/baseball/mlb/news");
-  const headlines = data.articles.slice(0, 10).map(a => a.headline).join("<br>");
-  document.getElementById("news-content").innerHTML = headlines;
+  const headlines = (data.articles || [])
+    .slice(0, 10)
+    .map(a => a.headline)
+    .join("<br>");
+  document.getElementById("news-content").innerHTML = headlines || "No news available.";
 }
 
+/* STANDINGS */
+
+async function loadMLBStandings() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/baseball/mlb/standings");
+
+  const aleast = (data.children || []).find(d => d.name === "American League East");
+  const nleast = (data.children || []).find(d => d.name === "National League East");
+
+  document.getElementById("mlb-aleast-standings").innerHTML =
+    aleast && aleast.standings && aleast.standings.entries
+      ? aleast.standings.entries
+          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+          .join("<br>")
+      : "No data.";
+
+  document.getElementById("mlb-nleast-standings").innerHTML =
+    nleast && nleast.standings && nleast.standings.entries
+      ? nleast.standings.entries
+          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+          .join("<br>")
+      : "No data.";
+}
+
+async function loadNHLStandings() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/hockey/nhl/standings");
+
+  const east = (data.children || []).find(d => (d.name || "").includes("Eastern"));
+
+  document.getElementById("nhl-east-standings").innerHTML =
+    east && east.standings && east.standings.entries
+      ? east.standings.entries
+          .map(t => `${t.team.displayName}: ${t.stats[0].value} pts`)
+          .join("<br>")
+      : "No data.";
+}
+
+async function loadNFLStandings() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/football/nfl/standings");
+
+  const afceast = (data.children || []).find(d => d.name === "AFC East");
+
+  document.getElementById("nfl-afceast-standings").innerHTML =
+    afceast && afceast.standings && afceast.standings.entries
+      ? afceast.standings.entries
+          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+          .join("<br>")
+      : "No data.";
+}
+
+async function loadNBAStandings() {
+  const data = await fetchJSON("https://site.api.espn.com/apis/v2/sports/basketball/nba/standings");
+
+  const east = (data.children || []).find(d => (d.name || "").includes("Eastern"));
+
+  document.getElementById("nba-east-standings").innerHTML =
+    east && east.standings && east.standings.entries
+      ? east.standings.entries
+          .map(t => `${t.team.displayName}: ${t.stats[0].value}-${t.stats[1].value}`)
+          .join("<br>")
+      : "No data.";
+}
+
+/* REFRESH LOOP */
+
 function refresh() {
+  // Scoreboards
   loadMLB();
   loadNHL();
   loadNFL();
   loadNBA();
+
+  // Standings
+  loadMLBStandings();
+  loadNHLStandings();
+  loadNFLStandings();
+  loadNBAStandings();
+
+  // Featured teams
   loadTeamNews(14, "bluejays-content"); // Blue Jays
   loadTeamNews(21, "mets-content");     // Mets
+
+  // General news
   loadGeneralNews();
 }
 
